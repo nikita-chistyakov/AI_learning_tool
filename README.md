@@ -4,7 +4,8 @@
 https://languageai.streamlit.app/
 
 ## File structure
-`````` your-french-tutor-app/
+`````` 
+AI French Learning Assistant/
 ├── .streamlit/
 │   └── secrets.toml  # For local development secrets
 ├── app.py            # Main Streamlit application
