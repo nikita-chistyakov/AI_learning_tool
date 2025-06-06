@@ -5,7 +5,7 @@ import sqlite3
 # Configure the Gemini API
 try:
     # Use Streamlit's secrets management
-    genai.configure(api_key=st.secrets["AIzaSyDFq_przYFo7QNITPZxbHgkcSkLp8eNaPQ"]) 
+    genai.configure(api_key=st.secrets[AIzaSyDFq_przYFo7QNITPZxbHgkcSkLp8eNaPQ]) 
 except Exception as e:
     st.error(f"Error configuring Gemini API: {e}")
     st.stop()
