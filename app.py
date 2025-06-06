@@ -19,10 +19,10 @@ init_db()
 st.title("Language learning with AI")
 
 # --- LLM for Q&A Section ---
-st.header("Ask Your French Tutor AI")
+st.header("Ask your new French tutor")
 user_question = st.text_area("Ask me anything about French language or learning!")
 
-if st.button("Get Answer"):
+if st.button("Get Answer / Répondre"):
     if user_question:
         with st.spinner("Thinking..."):
             try:
@@ -38,10 +38,10 @@ if 'quiz_manager' not in st.session_state:
     st.session_state.quiz_manager = QuizManager() # Initialize your quiz manager object
 
 # --- Add Word Section ---
-st.header("Add a New Word")
+st.header("Add a New Word (FR: ajouter un nouveau mot)")
 with st.form("new_word_form"):
     french_word_input = st.text_input("Enter a French word:")
-    submitted = st.form_submit_button("Add Word")
+    submitted = st.form_submit_button("Add Word / Ajouter un mot")
 
     if submitted and french_word_input:
         with st.spinner(f"Getting translation and example for '{french_word_input}'..."):
