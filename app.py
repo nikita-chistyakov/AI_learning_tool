@@ -74,18 +74,3 @@ else:
 # --- Quiz Section ---
 st.header("Quiz Yourself!")
 st.session_state.quiz_manager.display_quiz_ui() # Delegate UI to QuizManager
-
-# --- LLM for Q&A Section ---
-st.header("Ask Your French Tutor AI")
-user_question = st.text_area("Ask me anything about French language or learning!")
-
-if st.button("Get Answer"):
-    if user_question:
-        with st.spinner("Thinking..."):
-            try:
-                ai_answer = get_ai_response_for_qa(user_question)
-                st.markdown(ai_answer)
-            except Exception as e:
-                st.error(f"Error getting AI answer: {e}")
-    else:
-        st.warning("Please enter a question.")
