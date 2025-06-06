@@ -4,7 +4,7 @@
 https://languageai.streamlit.app/
 
 ## File structure
-your-french-tutor-app/
+`````` your-french-tutor-app/
 ├── .streamlit/
 │   └── secrets.toml  # For local development secrets
 ├── app.py            # Main Streamlit application
@@ -15,4 +15,4 @@ your-french-tutor-app/
 │   ├── database_manager.py
 │   ├── quiz_logic.py
 │   └── utils.py      # For general utility functions (e.g., prompt templates)
-└── README.md         # Good practice for project overview
+└── README.md         # Good practice for project overview ``````
