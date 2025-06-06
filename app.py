@@ -19,7 +19,7 @@ init_db()
 st.title("Language learning with AI")
 
 # --- LLM for Q&A Section ---
-st.header("Ask your new French tutor")
+st.header("Tutor: enter your questions here")
 user_question = st.text_area("Ask me anything about French language or learning!")
 
 if st.button("Get Answer / Répondre"):
