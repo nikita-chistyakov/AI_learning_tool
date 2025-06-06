@@ -18,6 +18,21 @@ init_db()
 
 st.title("Language learning with AI")
 
+# --- LLM for Q&A Section ---
+st.header("Ask Your French Tutor AI")
+user_question = st.text_area("Ask me anything about French language or learning!")
+
+if st.button("Get Answer"):
+    if user_question:
+        with st.spinner("Thinking..."):
+            try:
+                ai_answer = get_ai_response_for_qa(user_question)
+                st.markdown(ai_answer)
+            except Exception as e:
+                st.error(f"Error getting AI answer: {e}")
+    else:
+        st.warning("Please enter a question.")
+
 # --- Initialize Session State (Crucial for Streamlit) ---
 if 'quiz_manager' not in st.session_state:
     st.session_state.quiz_manager = QuizManager() # Initialize your quiz manager object
