@@ -1,126 +1,76 @@
+# app.py
 import streamlit as st
-import google.generativeai as genai
-import sqlite3
+from src.gemini_service import configure_gemini, get_word_info_from_ai, get_ai_response_for_qa
+from src.database_manager import init_db, add_vocabulary_entry, get_all_vocabulary, get_quiz_words
+from src.quiz_logic import QuizManager # Consider a class for quiz state
+from src.utils import display_word_details # Example utility
 
-# Configure the Gemini API
+# Configure Gemini API (this needs to be in app.py or called very early)
 try:
-    # Use Streamlit's secrets management
-    genai.configure(api_key=st.secrets[AIzaSyDFq_przYFo7QNITPZxbHgkcSkLp8eNaPQ]) 
+    # This will load from .streamlit/secrets.toml locally or Streamlit Cloud secrets
+    configure_gemini(st.secrets["GOOGLE_API_KEY"])
 except Exception as e:
     st.error(f"Error configuring Gemini API: {e}")
     st.stop()
 
-# Set up the model
-generation_config = {
-    "temperature": 0.9,
-    "top_p": 1,
-    "top_k": 1,
-    "max_output_tokens": 2048,
-}
-
-model = genai.GenerativeModel(model_name="gemini-1.5-flash",
-                              generation_config=generation_config)
+# Initialize the database (this will run once when the app starts)
+init_db()
 
 st.title("🇫🇷 Your Personal French Tutor AI")
 
-# Function to initialize the database
-def init_db():
-    conn = sqlite3.connect('vocabulary.db')
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS vocabulary (
-            id INTEGER PRIMARY KEY,
-            french_word TEXT NOT NULL,
-            english_translation TEXT NOT NULL,
-            example_sentence TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
+# --- Initialize Session State (Crucial for Streamlit) ---
+if 'quiz_manager' not in st.session_state:
+    st.session_state.quiz_manager = QuizManager() # Initialize your quiz manager object
 
-init_db()
-
+# --- Add Word Section ---
 st.header("Add a New Word")
-
 with st.form("new_word_form"):
-    french_word = st.text_input("Enter a French word:")
+    french_word_input = st.text_input("Enter a French word:")
     submitted = st.form_submit_button("Add Word")
 
-    if submitted and french_word:
-        with st.spinner("Getting information..."):
-            # Use Gemini to get the translation and an example
-            prompt_parts = [
-                f"Give me the English translation and a simple example sentence for the French word: '{french_word}'."
-            ]
-            response = model.generate_content(prompt_parts)
-
-            # You'll need to parse the response from Gemini
-            # This is a simplified example. You might need more robust parsing.
+    if submitted and french_word_input:
+        with st.spinner(f"Getting translation and example for '{french_word_input}'..."):
             try:
-                # A more robust approach would be to ask Gemini for a JSON response
-                lines = response.text.strip().split('\n')
-                translation = lines[0].split(':')[1].strip()
-                example = lines[1].split(':')[1].strip()
-
-                # Add to the database
-                conn = sqlite3.connect('vocabulary.db')
-                c = conn.cursor()
-                c.execute("INSERT INTO vocabulary (french_word, english_translation, example_sentence) VALUES (?, ?, ?)",
-                          (french_word, translation, example))
-                conn.commit()
-                conn.close()
-
-                st.success(f"Added '{french_word}' to your vocabulary!")
-                st.write(f"**Translation:** {translation}")
-                st.write(f"**Example:** {example}")
-
+                word_data = get_word_info_from_ai(french_word_input)
+                if word_data:
+                    add_vocabulary_entry(
+                        word_data["french_word"],
+                        word_data["english_translation"],
+                        word_data["example_sentence"]
+                    )
+                    st.success(f"Added '{word_data['french_word']}' to your vocabulary!")
+                    display_word_details(word_data)
+                else:
+                    st.error("AI did not provide complete information. Please try again.")
             except Exception as e:
-                st.error(f"Could not parse the response from the AI. Please try again. Error: {e}")
+                st.error(f"Error processing word: {e}")
+
+# --- Display Vocabulary Section ---
+st.header("Your Vocabulary")
+vocabulary_list = get_all_vocabulary()
+if vocabulary_list:
+    for word in vocabulary_list:
+        with st.expander(f"**{word[0]}** - {word[1]}"): # french, english
+            st.write(f"**Example:** {word[2]}") # example_sentence
+else:
+    st.info("Your vocabulary list is empty. Add some words above!")
 
 
-# --- quiz section ---
-
+# --- Quiz Section ---
 st.header("Quiz Yourself!")
+st.session_state.quiz_manager.display_quiz_ui() # Delegate UI to QuizManager
 
-# Function to get words for the quiz
-def get_quiz_words():
-    conn = sqlite3.connect('vocabulary.db')
-    c = conn.cursor()
-    c.execute("SELECT french_word, english_translation FROM vocabulary ORDER BY RANDOM() LIMIT 5")
-    words = c.fetchall()
-    conn.close()
-    return words
+# --- LLM for Q&A Section ---
+st.header("Ask Your French Tutor AI")
+user_question = st.text_area("Ask me anything about French language or learning!")
 
-if 'quiz_words' not in st.session_state:
-    st.session_state.quiz_words = []
-    st.session_state.current_question = 0
-    st.session_state.score = 0
-
-if st.button("Start Quiz"):
-    st.session_state.quiz_words = get_quiz_words()
-    st.session_state.current_question = 0
-    st.session_state.score = 0
-    st.experimental_rerun()
-
-if st.session_state.quiz_words:
-    if st.session_state.current_question < len(st.session_state.quiz_words):
-        word_pair = st.session_state.quiz_words[st.session_state.current_question]
-        french_word, correct_translation = word_pair
-
-        st.write(f"What is the English translation of: **{french_word}**?")
-
-        user_answer = st.text_input("Your Answer:", key=f"q_{st.session_state.current_question}")
-
-        if st.button("Submit Answer"):
-            if user_answer.strip().lower() == correct_translation.lower():
-                st.success("Correct! 🎉")
-                st.session_state.score += 1
-            else:
-                st.error(f"Sorry, the correct answer is: **{correct_translation}**")
-
-            st.session_state.current_question += 1
-            st.experimental_rerun()
-
+if st.button("Get Answer"):
+    if user_question:
+        with st.spinner("Thinking..."):
+            try:
+                ai_answer = get_ai_response_for_qa(user_question)
+                st.markdown(ai_answer)
+            except Exception as e:
+                st.error(f"Error getting AI answer: {e}")
     else:
-        st.write(f"Quiz finished! Your score is: {st.session_state.score}/{len(st.session_state.quiz_words)}")
-        st.session_state.quiz_words = [] # Reset the quiz
+        st.warning("Please enter a question.")
