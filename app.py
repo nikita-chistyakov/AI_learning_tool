@@ -16,7 +16,7 @@ except Exception as e:
 # Initialize the database (this will run once when the app starts)
 init_db()
 
-st.title("Leanguage learning with AI")
+st.title("Language learning with AI")
 
 # --- Initialize Session State (Crucial for Streamlit) ---
 if 'quiz_manager' not in st.session_state:
