@@ -38,8 +38,7 @@ if 'quiz_manager' not in st.session_state:
     st.session_state.quiz_manager = QuizManager() # Initialize your quiz manager object
 
 # --- Add Word Section ---
-st.header("Add a New Word \
-          (FR: ajouter un nouveau mot)")
+st.header("Add a New Word \n(FR: ajouter un nouveau mot)")
 with st.form("new_word_form"):
     french_word_input = st.text_input("Enter a French word:")
     submitted = st.form_submit_button("Add Word / Ajouter un mot")
