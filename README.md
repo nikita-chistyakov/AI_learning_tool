@@ -3,7 +3,7 @@
 ## Try me here:
 https://languageai.streamlit.app/
 
-## File structure
+### File structure
 `````` 
 AI French Learning Assistant/
 ├── .streamlit/
